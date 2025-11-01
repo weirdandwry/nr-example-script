@@ -1,0 +1,26 @@
+[ModMeta]
+schema=1
+name=test scripts
+author=Weird and Wry
+desc=test desc
+version=1.0.0
+
+[Script]
+id = waw_script_test_118_1
+name= Test script
+source = src/script1.nimbyscript
+
+[SignalTextures]
+id=waw_signal_textures_test_118_1
+name_loc=waw_signal_textures_test_118_1_loc
+name_en=Example texture
+state=textures/pass.png
+state=textures/stop.png
+
+[SignalTemplate]
+name_en = Test signal template 1
+name_loc = test_signal_template_1
+textures = waw_signal_textures_test_118_1
+kind = path
+extend = waw_script_test_118_1 SignalPrio
+extend = waw_script_test_118_1 UpcomingChange

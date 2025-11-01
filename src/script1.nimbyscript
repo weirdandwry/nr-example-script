@@ -1,0 +1,86 @@
+script meta {
+    lang: nimbyscript.v1,
+    api: nimbyrails.v1,
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct ProbeCheck extend Signal {
+    meta {
+        label: "Probe a track position",
+    },
+    probe: ID<Signal> meta {
+        label: "Probe",
+    },
+}
+
+pub fn ProbeCheck::signal_check(
+    db: &DB,
+    extrapolator: &Extrapolator,
+    motion: &Motion,
+    signal: &Signal
+): SignalCheck {
+    let config &= signal.view_ProbeCheck() else { return SignalCheck::Pass; }
+    let probe &= db.view(config.probe) else { return SignalCheck::Pass; }
+    let pos = probe.forward();
+    for hit in extrapolator.reservation_probe(pos) {
+        if !hit.train.id.equals(motion.train_id) {
+            return SignalCheck::Stop;
+        }
+    }
+    return SignalCheck::Pass;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+enum TestEnum {
+    NoWorky1,
+    NoWorky2 meta { label: "blah", },
+    Worky meta { label: "THIS", },
+    NoWorky3,
+    NoWorky4 meta { label: "hello", },
+}
+
+struct UpcomingChange extend Signal {
+    meta {
+        label: "Switch if train behind",
+    },
+    detect_at: ID<Signal> meta {
+        label: "Detect at",
+    },
+    drive_to: ID<Signal> meta {
+        label: "Drive to",
+    },
+    test_enum: TestEnum meta {
+        default: NoWorky2,
+        label: "test enum",
+    },
+    test_tag: ID<Tag>,
+}
+
+pub fn UpcomingChange::signal_change_path(
+    db: &DB,
+    extrapolator: &Extrapolator,
+    motion: &Motion,
+    signal: &Signal,
+    check: SignalCheck,
+    result: &mut SignalChangePathResult
+): SignalChangePath {
+    let config &= signal.view_UpcomingChange() else { return SignalChangePath::Keep; }
+    let probe &= db.view(config.detect_at) else { return SignalChangePath::Keep; }
+    if config.test_enum != TestEnum::Worky {
+        return SignalChangePath::Keep;
+    }
+    log("test @ @ aa @", signal, motion.train_id, 2u64, 3i16, true, 4f32, 5f64);
+    let change mut= false;
+    let train &= db.view(motion.train_id) else { return SignalChangePath::Keep; }
+    if train.tags.contains(config.test_tag) {
+        change = true;
+    }
+    if change {
+        let marker &= db.view(config.drive_to) else { return SignalChangePath::Keep; }
+        result.pos = marker.forward();
+        return SignalChangePath::Change;
+    }
+    return SignalChangePath::Keep;
+}
