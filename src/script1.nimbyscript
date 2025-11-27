@@ -41,7 +41,7 @@ pub fn ProbeCheck::event_signal_check(
     let pos = probe.forward();
     for hit in ctx.extrapolator.reservation_probe(pos) {
         if !hit.train.id.equals(motion.train_id) {
-            result.speed = self.speed_limit;
+            result.speed = self.speed_limit / 3.6;
             return SignalCheck::PassAtSpeed;
         }
     }
