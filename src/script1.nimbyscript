@@ -34,18 +34,31 @@ pub fn ProbeCheck::event_signal_check(
     ctx: &EventCtx,
     train: &Train,
     motion: &Motion,
-    signal: &Signal,
-    result: &mut SignalCheckResult
+    signal: &Signal
 ): SignalCheck {
     let probe &= ctx.db.view(self.probe) else { return SignalCheck::Pass; }
     let pos = probe.forward();
     for hit in ctx.extrapolator.reservation_probe(pos) {
         if !hit.train.id.equals(motion.train_id) {
-            result.speed = self.speed_limit / 3.6;
-            return SignalCheck::PassAtSpeed;
+            return SignalCheck::Stop;
         }
     }
     return SignalCheck::Pass;
+}
+
+pub fn ProbeCheck::event_signal_lookahead(
+    self: &ProbeCheck,
+    ctx: &EventCtx,
+    train: &Train,
+    motion: &Motion,
+    signal: &Signal,
+    train_distance: f64,
+    check: SignalCheck,
+    result: &mut SignalLookaheadResult
+) {
+    if check == SignalCheck::Stop && train_distance < 1000.0 {
+        result.max_speed = self.speed_limit;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
